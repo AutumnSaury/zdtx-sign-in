@@ -8,5 +8,6 @@ class Config(BaseSettings):
     zdtx_college_prefix: str
     zdtx_health_json: dict
     zdtx_health_json_meta: dict
+    zdtx_valid_users: list
     class Config:
         extra = "ignore"
