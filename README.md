@@ -7,21 +7,21 @@
 此插件需要提供以下配置项以供正常运行：
 
 ```json
-ZDTX_COLLEGE_PREFIX="xxx" # 指点天下域名前缀
-ZDTX_DEVICE_TOKEN="abccdef1234567890abc" # 长度为19位，供设备识别用
-ZDTX_PHONE="111xxxxxxxx" # 注册指点天下时使用的手机
-ZDTX_PASSWORD="xxx" # 指点天下账户密码
-ZDTX_HEALTH_JSON_META={} # 包含健康信息元数据的JSON，可通过抓包获取，或参考下文手写一份
-ZDTX_HEALTH_JSON={} # 包含健康信息数据的JSON，将被转为字符串并放进ZDTX_HEALTH_JSON_META的content属性，可通过抓包获取或参考下文手写一份
-ZDTX_VALID_USERS=[] # 合法用户ID，值为字符串
+ZDTX_COLLEGE_PREFIX="xxx" // 指点天下域名前缀
+ZDTX_DEVICE_TOKEN="abccdef1234567890abc" // 长度为19位，供设备识别用
+ZDTX_PHONE="111xxxxxxxx" // 注册指点天下时使用的手机
+ZDTX_PASSWORD="xxx" // 指点天下账户密码
+ZDTX_HEALTH_JSON_META={} // 包含健康信息元数据的JSON，可通过抓包获取，或参考下文手写一份
+ZDTX_HEALTH_JSON={} // 包含健康信息数据的JSON，将被转为字符串并放进ZDTX_HEALTH_JSON_META的content属性，可通过抓包获取或参考下文手写一份
+ZDTX_VALID_USERS=[] // 合法用户ID，值为字符串
 ```
 
 ZDTX_HEALTH_JSON参考：
 ```json
 {
-  # 位置信息可通过高德地图开放平台获取（https://lbs.gaode.com/console/show/picker）
+  // 位置信息可通过高德地图开放平台获取（https://lbs.gaode.com/console/show/picker）
   "location": {
-    # 地址可以随便写
+    // 地址可以随便写
     "address": "",
     "code": "0",
     "lng": 116.395711,
