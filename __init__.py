@@ -28,8 +28,7 @@ async def daka():
     login_status, token = get_token()
     if not login_status:
         await signin.send('尝试登录时发生错误')
-        await signin.finish(token)
-    
+        await signin.finish('错误代码：' + token)
     submit_status, submit_code = submit_health_info(token)
     if not submit_status:
         await signin.finish('提交健康信息时发生错误\n错误代码: ' + str(submit_code))
@@ -54,9 +53,9 @@ def get_token() -> tuple:
     except:
         return False, 'Network Error'
     if res['status'] == 1:
-        return True, str(res)
+        return True, res['data']
     else:
-        return False, str(res)
+        return False, res['status']
 
 
 # 提交打卡信息
@@ -76,6 +75,6 @@ def submit_health_info(token: str) -> tuple:
         return False, None
     
     if res['status'] != 1:
-        return False, res['status']
+        return False, str(res)
     else:
         return True, res['status']
