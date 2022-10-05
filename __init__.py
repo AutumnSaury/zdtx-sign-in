@@ -1,27 +1,25 @@
+from nonebot_plugin_apscheduler import scheduler
 from hashlib import md5
 import json
 from time import ctime
 from nonebot import get_driver
 from nonebot import on_command
+from nonebot import require
 from .config import Config
 
 import requests
 
+require("nonebot_plugin_apscheduler")
+
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
 
-# Export something for other plugin
-# export = nonebot.export()
-# export.foo = "bar"
-
-# @export.xxx
-# def some_function():
-#     pass
 
 async def user_checker(event) -> bool:
     return event.get_user_id() in config.zdtx_valid_users
 
 signin = on_command('指点天下签到', rule=user_checker)
+
 
 @signin.handle()
 async def daka():
@@ -34,6 +32,12 @@ async def daka():
         await signin.finish('提交健康信息时发生错误\n错误代码: ' + str(submit_code))
 
     await signin.finish('打卡成功，当前时间：' + ctime())
+
+
+@scheduler.scheduled_job("cron", hour=config.zdtx_hour, id="zdtx")
+async def scheduled_daka():
+    await daka()
+
 
 # 登录获取axy-token
 def get_token() -> tuple:
@@ -64,7 +68,8 @@ def submit_health_info(token: str) -> tuple:
     health_json['content'] = json.dumps(config.zdtx_health_json)
     try:
         res = requests.post(
-            url='https://' + config.zdtx_college_prefix + '.zhidiantianxia.cn/api/study/health/mobile/health/apply',
+            url='https://' + config.zdtx_college_prefix +
+                '.zhidiantianxia.cn/api/study/health/mobile/health/apply',
             headers={
                 'axy-phone': config.zdtx_phone,
                 'axy-token': token
@@ -73,7 +78,7 @@ def submit_health_info(token: str) -> tuple:
         ).json()
     except:
         return False, None
-    
+
     if res['status'] != 1:
         return False, str(res)
     else:
