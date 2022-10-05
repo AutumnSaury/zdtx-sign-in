@@ -1,3 +1,4 @@
+from email.message import Message
 from nonebot_plugin_apscheduler import scheduler
 from hashlib import md5
 import json
@@ -5,6 +6,8 @@ from time import ctime
 from nonebot import get_driver
 from nonebot import on_command
 from nonebot import require
+from nonebot import get_bot
+from nonebot.adapters.mirai2.message import MessageChain
 from .config import Config
 
 import requests
@@ -19,28 +22,43 @@ async def user_checker(event) -> bool:
     return event.get_user_id() in config.zdtx_valid_users
 
 signin = on_command('指点天下签到', rule=user_checker)
-
+# schedule_test = on_command('定时任务测试', rule=user_checker)
 
 @signin.handle()
 async def daka():
-    login_status, token = get_token()
-    if not login_status:
+    login_res = get_token()
+    if not login_res['success']:
         await signin.send('尝试登录时发生错误')
-        await signin.finish('错误代码：' + token)
-    submit_status, submit_code = submit_health_info(token)
-    if not submit_status:
-        await signin.finish('提交健康信息时发生错误\n错误代码: ' + str(submit_code))
+        await signin.send('错误代码：' + str(login_res['status']))
+        await signin.send('错误信息：' + login_res['msg'])
+        return False
+    submit_res = submit_health_info(login_res['token'])
+    if not submit_res['success']:
+        await signin.send('提交健康信息时发生错误')
+        await signin.send('错误代码: ' + str(submit_res['status']))
+        await signin.send('错误信息：' + submit_res['msg'])
+        return False
+    else:
+        await signin.send('打卡成功，当前时间：' + ctime())
+        return True
 
-    await signin.finish('打卡成功，当前时间：' + ctime())
-
-
+# @schedule_test.handle()
 @scheduler.scheduled_job("cron", hour=config.zdtx_hour, id="zdtx")
 async def scheduled_daka():
-    await daka()
-
+    bot = get_bot()
+    if not await daka():
+        await bot.send_group_message(
+            target=config.zdtx_info_group,
+            message_chain=MessageChain('打卡失败，请检查日志')
+        )
+    else:
+        await bot.send_group_message(
+            target=config.zdtx_info_group,
+            message_chain=MessageChain('本日打卡已完成')
+        )
 
 # 登录获取axy-token
-def get_token() -> tuple:
+def get_token() -> dict:
     try:
         res = requests.post(
             url='https://app.zhidiantianxia.cn/api/Login/pwd',
@@ -55,15 +73,26 @@ def get_token() -> tuple:
             }
         ).json()
     except:
-        return False, 'Network Error'
+        return {
+            'success': False,
+            'status': 'None',
+            'msg': '网络错误'
+        }
     if res['status'] == 1:
-        return True, res['data']
+        return {
+            'success': True,
+            'token': res['data']
+        }
     else:
-        return False, res['status']
+        return {
+            'success': False,
+            'status': res['status'],
+            'msg': res['msg']
+        }
 
 
 # 提交打卡信息
-def submit_health_info(token: str) -> tuple:
+def submit_health_info(token: str) -> dict:
     health_json = config.zdtx_health_json_meta
     health_json['content'] = json.dumps(config.zdtx_health_json)
     try:
@@ -77,9 +106,21 @@ def submit_health_info(token: str) -> tuple:
             json=health_json
         ).json()
     except:
-        return False, None
+        return {
+            'success': False,
+            'status': 'None',
+            'msg': '网络错误'
+        }
 
-    if res['status'] != 1:
-        return False, str(res)
+    if res['status'] == 1:
+        return {
+            'success': True,
+            'status': res['status'],
+            'msg': res['msg']
+        }
     else:
-        return True, res['status']
+        return {
+            'success': False,
+            'status': res['status'],
+            'msg': res['msg']
+        }

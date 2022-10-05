@@ -9,6 +9,7 @@ class Config(BaseSettings):
     zdtx_health_json: dict
     zdtx_health_json_meta: dict
     zdtx_valid_users: list
+    zdtx_info_group: int
     zdtx_hour: str
     class Config:
         extra = "ignore"
