@@ -36,8 +36,6 @@ async def scheduled_daka():
     dump_json('users.json', users)
 
 # 发起打卡
-
-
 async def daka(bot, user: dict, template: dict, dialogs: dict):
     logger.info('正在为用户 QQ:{}进行打卡'.format(user['id']))
     await bot.send_friend_message(
@@ -115,7 +113,6 @@ async def _(key=nbparam.ArgPlainText('affirmed')):
 
 @tutorial.got('college', prompt='请输入您所在学校的英文缩写（小写）\n指点天下目前仅接入郑州航空管理学院（zua）和华北水利水电大学（ncwu）')
 async def _(status: T_State, key=nbparam.ArgPlainText('college')):
-    logger.info(key)
     if key not in ['zua', 'ncwu']:
         await tutorial.reject('您输入的学校似乎不受支持，请重新输入')
     status['user']['basicInfo']['college'] = key
@@ -166,7 +163,6 @@ async def _(status: T_State, key=nbparam.ArgPlainText('template_id')):
     if int(key) not in [template['meta']['templateId'] for template in templates]:
         await tutorial.reject('您输入的编号有误，请重新输入')
     status['user']['health']['templateId'] = int(key)
-    logger.info(status)
 
 
 """

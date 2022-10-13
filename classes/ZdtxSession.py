@@ -23,15 +23,15 @@ class ZdtxSession:
     # 请求前检查token是否失效
     def check_token(func: Callable) -> Callable:
         # 通过请求检验token
-        def validator(token: str, phone: str) -> bool:
+        def preflight(token: str, phone: str) -> bool:
             try:
                 res = requests.post(
-                    url='https://api.zdtxapp.com/api/my/version/1',
+                    url='https://app.zhidiantianxia.cn/api/my/version/1',
                     headers={
                         'axy-phone': phone,
                         'axy-token': token
                     }
-                )
+                ).json()
             except:
                 raise ZdtxSessionException('检查token是否有效时发生网络错误')
             if res['status'] and res['status'] == 1:
@@ -42,7 +42,7 @@ class ZdtxSession:
         def wrapper(self, *args, **kwargs):
             if not self.user['token']['value'] or \
                     time.time() > self.user['token']['expire'] or \
-                    not validator(self.user['token']['value'], self.user['basicInfo']['phone']):
+                    not preflight(self.user['token']['value'], self.user['basicInfo']['phone']):
                 self.renew_token()
             return func(self, *args, **kwargs)
         return wrapper
