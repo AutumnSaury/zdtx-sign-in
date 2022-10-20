@@ -1,5 +1,4 @@
 import json
-from typing import Coroutine
 from nonebot_plugin_apscheduler import scheduler
 from nonebot import get_driver
 from nonebot import on_command
@@ -25,6 +24,7 @@ config = Config.parse_obj(global_config)
 tutorial = on_command("配置打卡信息", priority=5, block=True)
 scheduled_test = on_command("scheduled_test", priority=5, block=True)
 
+
 @scheduled_test.handle()
 @scheduler.scheduled_job("cron", hour=config.zdtx_hour, id="zdtx")
 async def scheduled_daka():
@@ -36,6 +36,8 @@ async def scheduled_daka():
     dump_json('users.json', users)
 
 # 发起打卡
+
+
 async def daka(bot, user: dict, template: dict, dialogs: dict):
     logger.info('正在为用户 QQ:{}进行打卡'.format(user['id']))
     await bot.send_friend_message(
@@ -92,6 +94,9 @@ async def _(status: T_State, e: Event):
             'templateOverrides': {},
         }
     }
+
+    if int(e.get_user_id()) in [user['id'] for user in users]:
+        await tutorial.finish('您已经配置过打卡信息了')
 
     await send_with_sleep('欢迎试用指点天下打卡功能')
     await send_with_sleep('在本交互式配置向导中，您将被要求输入您的指点天下账号信息与包括位置信息在内的隐私信息，这些信息将被安全地存储在我们的服务器上，并在打卡时上传至指点天下平台')
@@ -168,22 +173,30 @@ async def _(status: T_State, key=nbparam.ArgPlainText('template_id')):
 """
 TODO: 根据模板的描述信息进行信息录入
 """
+
+
 @tutorial.got('address', prompt='请输入您目前所处位置的地址\n例：北京市西城区西长安街174号')
 async def _(status: T_State, key=nbparam.ArgPlainText('address')):
     status['user']['health']['templateOverrides']['location'] = {}
     status['user']['health']['templateOverrides']['location']['address'] = key
 
+
 @tutorial.got('lng', prompt='请输入您所处位置的经度，经度和纬度可通过高德地图提供的坐标拾取器获取\n该坐标拾取器可通过https://lbs.gaode.com/console/show/picker访问\n例：111.111')
 async def _(status: T_State, key=nbparam.ArgPlainText('lng')):
-    status['user']['health']['templateOverrides']['location']['lng'] = float(key)
+    status['user']['health']['templateOverrides']['location']['lng'] = float(
+        key)
+
 
 @tutorial.got('lat', prompt='请输入您所处位置的纬度\n例：111.111')
 async def _(status: T_State, key=nbparam.ArgPlainText('lat')):
-    status['user']['health']['templateOverrides']['location']['lat'] = float(key)
+    status['user']['health']['templateOverrides']['location']['lat'] = float(
+        key)
+
 
 @tutorial.got('nowLocation', prompt='请输入您目前精确至县级行政区的位置，格式为：省-市-区/（直辖）市-市辖区-区')
 async def _(status: T_State, key=nbparam.ArgPlainText('nowLocation')):
     status['user']['health']['templateOverrides']['nowLocation'] = key
+
 
 @tutorial.handle()
 async def _(status: T_State):
@@ -192,5 +205,3 @@ async def _(status: T_State):
     dump_json('users.json', users)
     await tutorial.send('您已完成信息录入，我们将在服务器上保存如下信息：')
     await tutorial.finish(s)
-
-    
